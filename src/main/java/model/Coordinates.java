@@ -1,6 +1,7 @@
 package model;
 
 import javax.persistence.*;
+import javax.validation.constraints.Min;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
@@ -10,8 +11,11 @@ public class Coordinates {
     private int id;
 
     @Column(name = "x_coord")
+    @Min(-271)
     private int xCoord;
+
     @Column(name = "y_coord")
+    @Min(-595)
     private int yCoord;
 
     public Coordinates() { }

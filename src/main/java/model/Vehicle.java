@@ -5,6 +5,7 @@ import xml.LocalDateTimeAdapter;
 import javax.persistence.*;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import javax.validation.constraints.Min;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 public class Vehicle implements Serializable {
 
     @Id @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @Min(0)
     private int id; //Поле не может быть null, Значение поля должно быть больше 0, Значение этого поля должно быть уникальным, Значение этого поля должно генерироваться автоматически
 
     @Column(name = "name", nullable = false)
@@ -40,9 +42,11 @@ public class Vehicle implements Serializable {
     }
 
     @Column(name = "engine_power", nullable = false)
+    @Min(0)
     private long enginePower; //Значение поля должно быть больше 0
 
     @Column(name = "number_of_wheels", nullable = false)
+    @Min(0)
     private long numberOfWheels; //Значение поля должно быть больше 0
 
     @Column(name = "type")
