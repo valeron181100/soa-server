@@ -168,7 +168,10 @@ public class VehiclesServlet extends MyServlet {
         }
 
         if (pathParams != null && pathParams.length > 1 && !pathParams[1].equals("")) {
-            dao.delete(Integer.parseInt(pathParams[1]));
+            if (dao.findById(Integer.parseInt(pathParams[1])) != null)
+                dao.delete(Integer.parseInt(pathParams[1]));
+            else
+                resp.sendError(404, "Not found vehicle");
         }
     }
 
