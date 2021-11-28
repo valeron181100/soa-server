@@ -183,6 +183,16 @@ public class VehiclesServlet extends MyServlet {
         if (req.getPathInfo() != null) {
             pathParams = req.getPathInfo().split("/");
         }
+        VehicleDaoImpl dao = new VehicleDaoImpl();
+        if (pathParams != null && pathParams.length > 0 && !pathParams[1].equals("")) {
+            if (dao.findById(Integer.parseInt(pathParams[1])) == null) {
+                resp.sendError(404, "Can't update non-existent vehicle");
+            }
+        } else {
+            resp.sendError(400, "Put vehicle id into url");
+            return;
+        }
+
         StringBuffer workBuffer = new StringBuffer();
         String workString;
         while ((workString = b.readLine()) != null) {
@@ -197,9 +207,9 @@ public class VehiclesServlet extends MyServlet {
             resp.sendError(400, e.getCause().getMessage());
             return;
         }
-        VehicleDaoImpl dao = new VehicleDaoImpl();
-        if (pathParams != null)
-            vehicle.setId(Integer.parseInt(pathParams[0]));
+
+        if (pathParams != null && pathParams.length > 0 && !pathParams[1].equals(""))
+            vehicle.setId(Integer.parseInt(pathParams[1]));
         try {
             dao.update(vehicle);
         } catch (ConstraintViolationException e) {
