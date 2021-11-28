@@ -5,6 +5,7 @@ import database.VehicleDao;
 import database.VehicleDaoImpl;
 import model.*;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import xml.XMLConverter;
 
@@ -42,12 +43,26 @@ public class VehiclesServlet extends MyServlet {
         if (filtersParam != null) {
             filtersParam = URLDecoder.decode(filtersParam, StandardCharsets.UTF_8.name());
             if (!filtersParam.equals("{}")) {
-                JSONObject filtersObj = new JSONObject(filtersParam);
+
+                JSONObject filtersObj = null;
+
+                try {
+                    filtersObj = new JSONObject(filtersParam);
+                } catch (JSONException e) {
+                    resp.sendError(400, "Invalid JSON filters");
+                    return;
+                }
+
                 FilterQueryBuilder builder = new FilterQueryBuilder();
-                filtersObj.keySet().forEach(key -> {
+                for (int i = 0; i < filtersObj.keySet().toArray().length; i++) {
+                    String key = (String) filtersObj.keySet().toArray()[i];
                     VehicleFields field = VehicleFields.fromFieldName(key);
+                    if (field == null) {
+                        resp.sendError(400, "Filters url has no field with name " + key);
+                        return;
+                    }
                     builder.addFilter(field, filtersObj.getString(field.getFieldName()));
-                });
+                }
                 filters = builder.buildQuery();
             }
         }
@@ -106,7 +121,7 @@ public class VehiclesServlet extends MyServlet {
         BufferedReader b = new BufferedReader(new InputStreamReader(req.getInputStream()));
         StringBuffer workBuffer = new StringBuffer();
         String workString;
-        while((workString = b.readLine()) != null) {
+        while ((workString = b.readLine()) != null) {
             workBuffer.append(workString);
         }
         workString = workBuffer.toString();
@@ -122,7 +137,7 @@ public class VehiclesServlet extends MyServlet {
         try {
             dao.save(vehicle);
         } catch (ConstraintViolationException e) {
-         resp.sendError(400, "The data does not meet the database constraints");
+            resp.sendError(400, "The data does not meet the database constraints");
         } catch (NullPointerException e) {
             ArrayList<Field> fields = new ArrayList<Field>(Arrays.asList(vehicle.getClass().getFields()));
             StringBuilder response = new StringBuilder("Following fields cannot be empty: ");
@@ -163,7 +178,7 @@ public class VehiclesServlet extends MyServlet {
         BufferedReader b = new BufferedReader(new InputStreamReader(req.getInputStream()));
         StringBuffer workBuffer = new StringBuffer();
         String workString;
-        while((workString = b.readLine()) != null) {
+        while ((workString = b.readLine()) != null) {
             workBuffer.append(workString);
         }
         workString = workBuffer.toString();

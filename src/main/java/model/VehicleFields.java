@@ -1,6 +1,7 @@
 package model;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public enum VehicleFields {
@@ -25,6 +26,9 @@ public enum VehicleFields {
     }
 
     public static VehicleFields fromFieldName(String fieldName) {
-        return Arrays.stream(VehicleFields.values()).filter(p -> p.getFieldName().equals(fieldName)).collect(Collectors.toList()).get(0);
+        List<VehicleFields> list = Arrays.stream(VehicleFields.values()).filter(p -> p.getFieldName().equals(fieldName)).collect(Collectors.toList());
+        if (list.size() > 0)
+            return list.get(0);
+        return null;
     }
 }
