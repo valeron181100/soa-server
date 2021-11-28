@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <xs:element name="vehicle" type="VehicleXsdType"/>
+    <xs:complexType name="VehicleXsdType">
+        <xs:all>
+            <xs:element name="id" type="xs:int"/>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="coordinates" type="Coordinates"/>
+            <xs:element name="creationDate" type="ISODate"/>
+            <xs:element name="enginePower" type="xs:int"/>
+            <xs:element name="numberOfWheels" type="xs:int"/>
+            <xs:element name="type" type="VehicleType" minOccurs="0"/>
+            <xs:element name="fuelType" type="FuelType" minOccurs="0"/>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:simpleType name="VehicleType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="HATCHBACK" />
+            <xs:enumeration value="SEDAN" />
+            <xs:enumeration value="PLANE" />
+            <xs:enumeration value="SUBMARINE" />
+            <xs:enumeration value="SHIP" />
+            <xs:enumeration value="CHOPPER" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="FuelType" final="restriction" >
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="SOLID" />
+            <xs:enumeration value="LIQUID" />
+            <xs:enumeration value="GAS" />
+            <xs:enumeration value="DIESEL" />
+            <xs:enumeration value="KEROSENE" />
+            <xs:enumeration value="MANPOWER" />
+            <xs:enumeration value="NUCLEAR" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="Coordinates">
+        <xs:all>
+            <xs:element name="xCoord" type="xs:int"/>
+            <xs:element name="yCoord" type="xs:int"/>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:simpleType name="ISODate">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="((\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+)|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d)|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d))Z?"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>

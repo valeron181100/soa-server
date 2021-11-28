@@ -14,12 +14,16 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.ConstraintViolationException;
+import javax.xml.bind.JAXBException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.lang.reflect.Field;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @WebServlet(urlPatterns = {"/api/vehicles", "/api/vehicles/*"})
@@ -107,12 +111,35 @@ public class VehiclesServlet extends MyServlet {
         }
         workString = workBuffer.toString();
 
-        Vehicle vehicle = XMLConverter.convertToJava(workString);
+        Vehicle vehicle = null;
+        try {
+            vehicle = XMLConverter.convertToJava(workString);
+        } catch (JAXBException e) {
+            resp.sendError(400, e.getCause().getMessage());
+            return;
+        }
         VehicleDaoImpl dao = new VehicleDaoImpl();
         try {
             dao.save(vehicle);
         } catch (ConstraintViolationException e) {
          resp.sendError(400, "The data does not meet the database constraints");
+        } catch (NullPointerException e) {
+            ArrayList<Field> fields = new ArrayList<Field>(Arrays.asList(vehicle.getClass().getFields()));
+            StringBuilder response = new StringBuilder("Following fields cannot be empty: ");
+            Vehicle finalVehicle = vehicle;
+            fields.forEach(field -> {
+                boolean access = field.isAccessible();
+                field.setAccessible(true);
+                try {
+                    if (!field.getName().equals("fuelType") && !field.getName().equals("type") && field.get(finalVehicle) == null)
+                        response.append(field.getName()).append(", ");
+                    field.setAccessible(access);
+                } catch (IllegalAccessException illegalAccessException) {
+                    illegalAccessException.printStackTrace();
+                }
+            });
+
+            resp.sendError(400, response.toString());
         }
         int k = 0;
     }
@@ -141,7 +168,13 @@ public class VehiclesServlet extends MyServlet {
         }
         workString = workBuffer.toString();
 
-        Vehicle vehicle = XMLConverter.convertToJava(workString);
+        Vehicle vehicle = null;
+        try {
+            vehicle = XMLConverter.convertToJava(workString);
+        } catch (JAXBException e) {
+            resp.sendError(400, e.getCause().getMessage());
+            return;
+        }
         VehicleDaoImpl dao = new VehicleDaoImpl();
         try {
             dao.update(vehicle);
