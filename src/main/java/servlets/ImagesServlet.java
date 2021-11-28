@@ -18,7 +18,7 @@ import org.jsoup.nodes.Element;
 import org.xml.sax.SAXException;
 
 
-@WebServlet("/images")
+@WebServlet("/api/images")
 public class ImagesServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

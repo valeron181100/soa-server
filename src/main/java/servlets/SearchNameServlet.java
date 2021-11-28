@@ -19,7 +19,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-@WebServlet("/search_by_name")
+@WebServlet("/api/search_by_name")
 public class SearchNameServlet extends HttpServlet {
 
     @Override
@@ -33,7 +33,7 @@ public class SearchNameServlet extends HttpServlet {
         String query = req.getParameter("q");
 
         if (query == null) {
-            resp.sendError(400);
+            resp.sendError(400, "Query parameter was expected");
             return;
         }
 
@@ -50,21 +50,41 @@ public class SearchNameServlet extends HttpServlet {
         resp.setContentType("application/xml");
         try (PrintWriter out = resp.getWriter()) {
             if (pathParams != null && pathParams.length > 1 && !pathParams[1].equals("")) {
-                Vehicle vehicle = dao.findById(Integer.parseInt(pathParams[1]));
-                out.println(XMLConverter.convert(vehicle));
+                try {
+                    Vehicle vehicle = dao.findById(Integer.parseInt(pathParams[1]));
+                    out.println(XMLConverter.convert(vehicle));
+                } catch (NumberFormatException e) {
+                    resp.sendError(400, "Invalid query parameter");
+                }
             } else {
-                List<Vehicle> vehicles;
+                List<Vehicle> vehicles = null;
                 if ((startIndex != null && !startIndex.isEmpty()) || (maxResults != null && !maxResults.isEmpty())) {
                     if ((startIndex != null && !startIndex.isEmpty()) && (maxResults != null && !maxResults.isEmpty())) {
-                        vehicles = dao.findByName(query, Integer.parseInt(startIndex), Integer.parseInt(maxResults), VehicleFields.valueOf(sortField), isOrderDesc);
+                        try {
+                            vehicles = dao.findByName(query, Integer.parseInt(startIndex), Integer.parseInt(maxResults), VehicleFields.valueOf(sortField), isOrderDesc);
+                        } catch (NumberFormatException e) {
+                            resp.sendError(400, "Invalid query parameter");
+                        }
                     }
                     else if ((startIndex != null && !startIndex.isEmpty()))
-                        vehicles = dao.findByName(query, Integer.parseInt(startIndex), null, VehicleFields.valueOf(sortField), isOrderDesc);
+                        try {
+                            vehicles = dao.findByName(query, Integer.parseInt(startIndex), null, VehicleFields.valueOf(sortField), isOrderDesc);
+                        } catch (IllegalArgumentException e) {
+                            resp.sendError(400, "Invalid query parameter");
+                        }
                     else
-                        vehicles = dao.findByName(query, null, Integer.parseInt(maxResults), VehicleFields.valueOf(sortField), isOrderDesc);
+                        try {
+                            vehicles = dao.findByName(query, null, Integer.parseInt(maxResults), VehicleFields.valueOf(sortField), isOrderDesc);
+                        } catch (IllegalArgumentException e) {
+                            resp.sendError(400, "Invalid query parameter");
+                        }
                 }
                 else
-                    vehicles = dao.findByName(query, VehicleFields.valueOf(sortField), isOrderDesc);
+                    try {
+                        vehicles = dao.findByName(query, VehicleFields.valueOf(sortField), isOrderDesc);
+                    } catch (IllegalArgumentException e) {
+                        resp.sendError(400, "Invalid query parameter");
+                    }
 
                 Vehicles vehiclesXmlList = new Vehicles();
                 vehiclesXmlList.setVehicle(vehicles);

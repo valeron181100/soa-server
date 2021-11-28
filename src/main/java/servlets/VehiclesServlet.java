@@ -13,6 +13,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.ConstraintViolationException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -21,11 +22,12 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-@WebServlet(urlPatterns = {"/vehicles", "/vehicles/*"})
+@WebServlet(urlPatterns = {"/api/vehicles", "/api/vehicles/*"})
 public class VehiclesServlet extends MyServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
         VehicleDaoImpl dao = new VehicleDaoImpl();
         String startIndex = req.getParameter("from_index");
         String maxResults = req.getParameter("max_results");
@@ -59,21 +61,31 @@ public class VehiclesServlet extends MyServlet {
         resp.setContentType("application/xml");
         try (PrintWriter out = resp.getWriter()) {
             if (pathParams != null && pathParams.length > 1 && !pathParams[1].equals("")) {
-                Vehicle vehicle = dao.findById(Integer.parseInt(pathParams[1]));
-                out.println(XMLConverter.convert(vehicle));
-            } else {
-                List<Vehicle> vehicles;
-                if ((startIndex != null && !startIndex.isEmpty()) || (maxResults != null && !maxResults.isEmpty())) {
-                    if ((startIndex != null && !startIndex.isEmpty()) && (maxResults != null && !maxResults.isEmpty())) {
-                        vehicles = dao.findAll(Integer.parseInt(startIndex), Integer.parseInt(maxResults), VehicleFields.valueOf(sortField), isOrderDesc, filters);
-                    }
-                    else if ((startIndex != null && !startIndex.isEmpty()))
-                        vehicles = dao.findAll(Integer.parseInt(startIndex), null, VehicleFields.valueOf(sortField), isOrderDesc, filters);
-                    else
-                        vehicles = dao.findAll(null, Integer.parseInt(maxResults), VehicleFields.valueOf(sortField), isOrderDesc, filters);
+                try {
+                    Vehicle vehicle = dao.findById(Integer.parseInt(pathParams[1]));
+                    out.println(XMLConverter.convert(vehicle));
+                } catch (IllegalArgumentException e) {
+                    resp.sendError(400, "Invalid query parameter");
                 }
-                else
-                    vehicles = dao.findAll(VehicleFields.valueOf(sortField), isOrderDesc, filters);
+            } else {
+                List<Vehicle> vehicles = null;
+                if ((startIndex != null && !startIndex.isEmpty()) || (maxResults != null && !maxResults.isEmpty())) {
+                    try {
+                        if ((startIndex != null && !startIndex.isEmpty()) && (maxResults != null && !maxResults.isEmpty())) {
+                            vehicles = dao.findAll(Integer.parseInt(startIndex), Integer.parseInt(maxResults), VehicleFields.valueOf(sortField), isOrderDesc, filters);
+                        } else if ((startIndex != null && !startIndex.isEmpty()))
+                            vehicles = dao.findAll(Integer.parseInt(startIndex), null, VehicleFields.valueOf(sortField), isOrderDesc, filters);
+                        else
+                            vehicles = dao.findAll(null, Integer.parseInt(maxResults), VehicleFields.valueOf(sortField), isOrderDesc, filters);
+                    } catch (IllegalArgumentException e) {
+                        resp.sendError(400, "Invalid query parameter");
+                    }
+                } else
+                    try {
+                        vehicles = dao.findAll(VehicleFields.valueOf(sortField), isOrderDesc, filters);
+                    } catch (IllegalArgumentException e) {
+                        resp.sendError(400, "Invalid query parameter");
+                    }
 
                 Vehicles vehiclesXmlList = new Vehicles();
                 vehiclesXmlList.setVehicle(vehicles);
@@ -97,7 +109,11 @@ public class VehiclesServlet extends MyServlet {
 
         Vehicle vehicle = XMLConverter.convertToJava(workString);
         VehicleDaoImpl dao = new VehicleDaoImpl();
-        dao.save(vehicle);
+        try {
+            dao.save(vehicle);
+        } catch (ConstraintViolationException e) {
+         resp.sendError(400, "The data does not meet the database constraints");
+        }
         int k = 0;
     }
 
@@ -127,6 +143,10 @@ public class VehiclesServlet extends MyServlet {
 
         Vehicle vehicle = XMLConverter.convertToJava(workString);
         VehicleDaoImpl dao = new VehicleDaoImpl();
-        dao.update(vehicle);
+        try {
+            dao.update(vehicle);
+        } catch (ConstraintViolationException e) {
+            resp.sendError(400, "The data does not meet the database constraints");
+        }
     }
 }
