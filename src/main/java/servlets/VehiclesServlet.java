@@ -176,6 +176,10 @@ public class VehiclesServlet extends MyServlet {
     @Override
     public void doPatch(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         BufferedReader b = new BufferedReader(new InputStreamReader(req.getInputStream()));
+        String[] pathParams = null;
+        if (req.getPathInfo() != null) {
+            pathParams = req.getPathInfo().split("/");
+        }
         StringBuffer workBuffer = new StringBuffer();
         String workString;
         while ((workString = b.readLine()) != null) {
@@ -191,6 +195,8 @@ public class VehiclesServlet extends MyServlet {
             return;
         }
         VehicleDaoImpl dao = new VehicleDaoImpl();
+        if (pathParams != null)
+            vehicle.setId(Integer.parseInt(pathParams[0]));
         try {
             dao.update(vehicle);
         } catch (ConstraintViolationException e) {
